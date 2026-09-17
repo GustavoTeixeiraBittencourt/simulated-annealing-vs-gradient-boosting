@@ -1,6 +1,5 @@
 # Simulated Annealing vs. Gradient Boosting: Um Estudo Comparativo de Estratégias de Inteligência Artificial
 
-Projeto bimestral da disciplina de **Inteligência Computacional** — CESUPA (Centro Universitário do Estado do Pará), Engenharia de Computação, Turma EC8MA.
 
 **Autores:** Gustavo Teixeira Bittencourt de Oliveira, Edgar Klewert, Christophe Abelem, Adler Castro
 
