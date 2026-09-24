@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# cache local do dataset baixado do OpenML
+data/raw/*
+!data/raw/.gitkeep
+
+# saída bruta gerada pela biblioteca chefboost (regras .py dinâmicas)
+outputs/
+
+.ipynb_checkpoints/

@@ -1,0 +1,8 @@
+# Dependências do módulo de Árvore de Decisão.
+# Versões fixadas para reprodutibilidade (testado com Python 3.12).
+numpy==2.5.3
+pandas==3.0.6
+scikit-learn==1.9.1
+chefboost==0.0.19
+matplotlib==3.10.7
+pytest==8.4.2
