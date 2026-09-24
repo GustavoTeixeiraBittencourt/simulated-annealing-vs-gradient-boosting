@@ -63,6 +63,17 @@ O dataset originalmente cogitado, Credit Card Fraud (Kaggle), foi descartado: se
 | **C4.5** (chefboost) | 72,0% | 1 | 3 | Sim, mas não atinge a meta na validação |
 | **Gradient Boosting** | 76,0% | 3 | 100 árvores | Não — só a importância agregada das variáveis é legível |
 
+### Análise do gráfico: complexidade × acurácia
+
+![Complexidade × acurácia — busca da árvore mais enxuta](arvore-decisao/resultados/figuras/complexidade_vs_acuracia_cart.png)
+
+O gráfico acima mostra as 45 configurações testadas na busca do CART (9 profundidades × 5 valores de folha mínima), com o número de folhas no eixo X, a acurácia média de validação cruzada no eixo Y, e a meta de 71% marcada pela linha tracejada.
+
+- **Árvores rasas demais (2 ou 4 folhas, profundidade 1-2)** ficam pouco acima da baseline de classe majoritária (70%) — entre 70,0% e 70,8% — abaixo da meta em qualquer configuração de folha mínima: perguntas únicas não capturam sinal suficiente neste dataset.
+- **As configurações que atingem a meta se concentram entre 8 e 27 folhas** (pontos verdes), formando um platô estreito de acurácia entre 71,0% e 72,0% — não existe uma árvore "muito melhor" nessa faixa, só variações pequenas.
+- **Além de ~30 folhas, a acurácia cai e passa a oscilar** conforme a árvore cresce sem limite — chegando a 68,1% na configuração mais complexa (146 folhas, profundidade 22, sem controle de folha mínima). Mais complexidade não compra mais acurácia aqui: compra sobreajuste às dobras de treino.
+- **O ponto de maior acurácia da busca inteira** é profundidade 4 / folha mínima 20 (13 folhas, 72,0% de CV) — mas **não foi o escolhido**. Pela regra de desempate (menor número de folhas primeiro), a configuração vencedora é profundidade 3 / folha mínima 1 (8 folhas, 71,9% de CV): a diferença de acurácia entre as duas é desprezível, e a segunda é visivelmente mais enxuta no gráfico (mais à esquerda). É exatamente o comportamento pretendido pelo critério de seleção: entre opções equivalentes em desempenho, vence a mais simples, não a mais acurada.
+
 ### O que esses números mostram
 
 O Gradient Boosting vence em acurácia, como esperado de um ensemble — mas ao custo total de interpretabilidade: 100 árvores combinadas não podem ser lidas como um conjunto de regras, só resumidas por importância de variável.
