@@ -1,0 +1,62 @@
+,CART (árvore única),Gradient Boosting
+age,0.1199,0.0779
+checking_status_0<=X<200,0.0,0.0034
+checking_status_<0,0.0,0.0284
+checking_status_>=200,0.0,0.0063
+checking_status_no checking,0.5356,0.1639
+credit_amount,0.0,0.1414
+credit_history_all paid,0.0,0.0093
+credit_history_critical/other existing credit,0.0,0.0284
+credit_history_delayed previously,0.0,0.0088
+credit_history_existing paid,0.0,0.0055
+credit_history_no credits/all paid,0.0,0.0089
+duration,0.1917,0.1189
+employment_1<=X<4,0.0,0.0004
+employment_4<=X<7,0.0,0.0088
+employment_<1,0.0,0.014
+employment_>=7,0.0,0.0006
+employment_unemployed,0.0,0.0249
+existing_credits,0.0,0.0052
+foreign_worker_no,0.0,0.0003
+foreign_worker_yes,0.0,0.0064
+housing_for free,0.0,0.0014
+housing_own,0.0,0.001
+housing_rent,0.0,0.0108
+installment_commitment,0.0,0.0181
+job_high qualif/self emp/mgmt,0.0,0.0009
+job_skilled,0.0,0.0
+job_unemp/unskilled non res,0.0,0.004
+job_unskilled resident,0.0,0.0
+num_dependents,0.0,0.0025
+other_parties_co applicant,0.0,0.0014
+other_parties_guarantor,0.0,0.0346
+other_parties_none,0.0,0.0014
+other_payment_plans_bank,0.0,0.0128
+other_payment_plans_none,0.0984,0.0284
+other_payment_plans_stores,0.0,0.0011
+own_telephone_none,0.0,0.0004
+own_telephone_yes,0.0,0.0022
+personal_status_female div/dep/mar,0.0,0.0063
+personal_status_male div/sep,0.0,0.0017
+personal_status_male mar/wid,0.0,0.0026
+personal_status_male single,0.0,0.0065
+property_magnitude_car,0.0,0.0076
+property_magnitude_life insurance,0.0,0.013
+property_magnitude_no known property,0.0,0.0125
+property_magnitude_real estate,0.0545,0.0112
+purpose_business,0.0,0.0035
+purpose_domestic appliance,0.0,0.0
+purpose_education,0.0,0.0133
+purpose_furniture/equipment,0.0,0.0036
+purpose_new car,0.0,0.0267
+purpose_other,0.0,0.0
+purpose_radio/tv,0.0,0.0102
+purpose_repairs,0.0,0.0044
+purpose_retraining,0.0,0.0012
+purpose_used car,0.0,0.0266
+residence_since,0.0,0.0225
+savings_status_100<=X<500,0.0,0.0007
+savings_status_500<=X<1000,0.0,0.0
+savings_status_<100,0.0,0.0242
+savings_status_>=1000,0.0,0.0093
+savings_status_no known savings,0.0,0.0095

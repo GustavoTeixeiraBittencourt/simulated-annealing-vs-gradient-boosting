@@ -1,0 +1,7 @@
+profundidade_maxima,acuracia_cv,n_folhas,profundidade_real,atinge_meta
+1,0.7025,3,1,False
+2,0.6912,7,2,False
+3,0.6925,12,3,False
+4,0.6863,18,4,False
+5,0.6787,27,5,False
+6,0.67,47,6,False
