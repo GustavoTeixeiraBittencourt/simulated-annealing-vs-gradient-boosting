@@ -114,15 +114,31 @@ def traduzir_classe(rotulo: str) -> str:
     return TRADUCAO_CLASSES.get(rotulo, rotulo)
 
 
-def _descrever_condicao_cart(nome_feature: str, limiar: float, vai_para_esquerda: bool) -> str:
-    """Quando a feature vem de one-hot, o corte em 0.5 vira uma afirmação
-    categórica em vez de uma desigualdade numérica sem sentido."""
+def coluna_e_categoria_one_hot(nome_feature: str):
+    """Se `nome_feature` veio do one-hot de `preparar_para_cart`, devolve
+    `(coluna_original, categoria)`; caso contrário devolve `None`. Único
+    lugar que sabe reconstruir o atributo/categoria a partir do nome da
+    coluna gerada por `pandas.get_dummies` — reusado por quem descreve
+    condições, monta perguntas e decide o sentido das setas na árvore."""
     for coluna_original in TRADUCAO_ATRIBUTOS:
         prefixo = coluna_original + "_"
         if nome_feature.startswith(prefixo):
-            categoria = nome_feature[len(prefixo):]
-            descricao = f"{traduzir_atributo(coluna_original)} = {traduzir_categoria(coluna_original, categoria)}"
-            return ("NÃO é o caso que " + descricao) if vai_para_esquerda else descricao
+            return coluna_original, nome_feature[len(prefixo):]
+    return None
+
+
+def eh_feature_one_hot(nome_feature: str) -> bool:
+    return coluna_e_categoria_one_hot(nome_feature) is not None
+
+
+def _descrever_condicao_cart(nome_feature: str, limiar: float, vai_para_esquerda: bool) -> str:
+    """Quando a feature vem de one-hot, o corte em 0.5 vira uma afirmação
+    categórica em vez de uma desigualdade numérica sem sentido."""
+    par = coluna_e_categoria_one_hot(nome_feature)
+    if par is not None:
+        coluna_original, categoria = par
+        descricao = f"{traduzir_atributo(coluna_original)} = {traduzir_categoria(coluna_original, categoria)}"
+        return ("NÃO é o caso que " + descricao) if vai_para_esquerda else descricao
 
     nome_traduzido = traduzir_atributo(nome_feature)
     operador = "<=" if vai_para_esquerda else ">"
@@ -163,6 +179,25 @@ def extrair_regras_cart(arvore, nomes_colunas: list, nomes_classes: list) -> lis
 
     percorrer(0, [])
     return regras
+
+
+def nomes_perguntas_cart(nomes_colunas: list) -> list:
+    """Traduz os nomes técnicos das colunas one-hot/numéricas do CART em
+    rótulos legíveis (perguntas de sim/não, ou o nome do atributo em
+    português) para usar como `feature_names` do `plot_tree` — sem isso, a
+    árvore desenhada mostra nomes de coluna crus como "checking_status_no
+    checking", ilegíveis para quem não é técnico."""
+    perguntas = []
+    for nome in nomes_colunas:
+        par = coluna_e_categoria_one_hot(nome)
+        if par is not None:
+            coluna_original, categoria = par
+            descricao = traduzir_categoria(coluna_original, categoria)
+            pergunta = f"{traduzir_atributo(coluna_original).capitalize()} é \"{descricao}\"?"
+        else:
+            pergunta = traduzir_atributo(nome).capitalize()
+        perguntas.append(pergunta)
+    return perguntas
 
 
 def caminho_decisao_cart(arvore, linha, nomes_colunas: list) -> list:
