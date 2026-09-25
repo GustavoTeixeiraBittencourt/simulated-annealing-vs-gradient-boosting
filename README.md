@@ -18,15 +18,52 @@ Este repositório reúne a aplicação prática e a comparação crítica de dua
 
 ---
 
-## 1. Busca Local — Simulated Annealing
+## 1. Busca Local — Hill Climbing, Simulated Annealing e SA com Reaquecimento
 
-**Problema:** otimização de rota de entregas — o Problema do Caixeiro-Viajante (*Traveling Salesman Problem*), inspirado na necessidade real de uma transportadora minimizar a distância total percorrida ao visitar um conjunto de pontos de entrega.
+**Problema:** EVRP (*Electric Vehicle Routing Problem*) — roteamento de veículos elétricos com restrição de autonomia de bateria e recarga em estações específicas, construído a partir do TSP **GR17** (TSPLIB, Groetschel), um problema clássico de 17 cidades com matriz de distância real e tour ótimo conhecido (custo 2085). O GR17 foi adaptado para EVRP por mapeamento manual de papéis sobre os 17 nós já existentes — depósito (nó 1), estações de recarga (nós 3, 9, 14) e clientes (os demais 13 nós) — sem alterar nenhuma distância da matriz original.
 
-**Algoritmo:** Simulated Annealing (Têmpera Simulada), com resfriamento geométrico.
+### Algoritmos comparados
 
-**Por que essa escolha:** o espaço de busca do TSP é repleto de ótimos locais. Diferente do Hill Climbing puro — que trava assim que não encontra um vizinho melhor —, o Simulated Annealing aceita, com probabilidade decrescente ao longo do tempo, movimentos que pioram temporariamente a solução, permitindo escapar dessas armadilhas.
+| Algoritmo | Tipo | Papel na comparação |
+|---|---|---|
+| **Hill Climbing** (reinício aleatório) | Busca local gulosa | Algoritmo obrigatório da modalidade — baseline; só aceita vizinhos melhores-ou-iguais, reinicia ao estagnar |
+| **Simulated Annealing** | Busca local probabilística, resfriamento geométrico | Algoritmo principal da modalidade — aceita pioras com probabilidade decrescente; `cooling_rate` calibrado analiticamente (não por tentativa e erro) |
+| **SA com reaquecimento** | Variante de Simulated Annealing | Variante aprimorada — reaquece a temperatura quando a melhor solução global fica estagnada por um número de iterações |
 
-*(Implementação e resultados deste módulo em desenvolvimento pelo restante da equipe.)*
+**Por que essa escolha:** o espaço de busca do EVRP combina a dificuldade combinatória do TSP com uma restrição adicional de viabilidade de bateria, criando um espaço irregular, com múltiplos ótimos locais e regiões inviáveis. O Hill Climbing, por só aceitar vizinhos melhores-ou-iguais, fica preso no primeiro ótimo local ou platô; o Simulated Annealing aceita, com probabilidade decrescente ao longo da execução, movimentos que pioram temporariamente a solução — o que se mostrou necessário neste problema especificamente para escapar da região inviável do espaço de busca. A variante com reaquecimento testa se reabrir essa exploração probabilística depois que a temperatura já esfriou traz algum ganho adicional.
+
+### Dataset
+
+**GR17** (TSPLIB), 17 cidades — matriz de distância real e tour ótimo de referência conhecido. Datasets EVRP prontos foram avaliados e descartados por não se encaixarem no escopo e prazo do módulo: o E-VRPTW de Schneider, Stenger & Goeke (2014) adiciona janelas de tempo (complexidade além do necessário), e o EC-TSP dataset (Gialos & Zeimpekis, 2023, Mendeley) exigiria um trabalho de parsing/limpeza desproporcional. Com autorização da professora para adaptar um dataset existente (desde que documentado), o GR17 foi adotado e mapeado para EVRP: `BATTERY_CAPACITY=800`, `CONSUMPTION_RATE=1.0` (1:1 com a distância), `RECHARGE_MODE="full"` (recarga sempre total ao passar por depósito/estação).
+
+### Metodologia
+
+- Os três algoritmos compartilham a mesma função objetivo (`evaluate = custo de distância + penalidade de viabilidade de bateria`) e os mesmos operadores de vizinhança — condição necessária para que a comparação entre eles seja válida.
+- Execuções pareadas: a mesma seed é usada nos três algoritmos em cada rodada, garantindo que todos partam da mesma rota inicial.
+- **n=30 execuções**, `total_evaluations=20.000` avaliações por execução para os três algoritmos, `seed_base=2026`.
+- Teste de **Wilcoxon pareado** sobre o custo final para os três pares possíveis.
+
+### Resultados (n=30)
+
+| Algoritmo | Taxa de viabilidade | Custo médio | Custo mediano |
+|---|---:|---:|---:|
+| Hill Climbing (orçamento fixo) | 29/30 | 2750,1 | 2680,0 |
+| Simulated Annealing (schedule calibrado) | 30/30 | 2536,3 | 2530,0 |
+| SA com reaquecimento (calibrado) | 30/30 | 2596,6 | 2556,0 |
+
+| Teste de Wilcoxon (pareado) | Estatística | p-valor |
+|---|---:|---:|
+| Hill Climbing vs. Simulated Annealing | 36,5000 | 0,000055 |
+| Hill Climbing vs. SA com reaquecimento | 63,0000 | 0,000489 |
+| Simulated Annealing vs. SA com reaquecimento | 125,5000 | 0,027741 |
+
+### O que esses números mostram
+
+Dois achados de processo sustentam esses resultados. Primeiro, a **correção da função de penalidade**: a versão original penalizava toda rota inviável com um valor fixo em degrau, sem gradiente entre "quase viável" e "muito inviável" — sob essa penalidade, o Hill Climbing nunca encontrava uma rota viável em mais de 1 milhão de avaliações testadas. Substituí-la por uma penalidade proporcional ao déficit total de bateria destravou a busca: nas mesmas condições, o Hill Climbing passou a encontrar viabilidade em 20 de 20 execuções. Segundo, a **recalibração do resfriamento do SA**: o `cooling_rate` fixo inicial (0,995) esgotava a temperatura em cerca de 8,5% do orçamento de 20.000 avaliações, fazendo o SA se comportar como uma busca gulosa comum pelo resto da execução. Calculando `cooling_rate` analiticamente para consumir o orçamento inteiro, a vantagem real do SA sobre o Hill Climbing apareceu de forma nítida (p=0,000055 acima).
+
+A variante de reaquecimento, porém, **não superou o SA puro** — Simulated Annealing venceu o SA com reaquecimento (p=0,027741), com significância mais modesta que os outros dois pares, mas ainda válida. Reaquecer com os parâmetros exploratórios iniciais chegou a quebrar o algoritmo sob o novo schedule (apenas 1 em 30 execuções viáveis, antes da recalibração); mesmo depois de recalibrado, o reaquecimento recuperou a viabilidade (30/30) mas não trouxe ganho sobre o SA puro — um resultado honesto, não escondido: para este problema pequeno (17 nós) com um schedule já bem calibrado, a busca probabilística padrão parece já dispor de exploração suficiente sem perturbações extras.
+
+Todas as decisões técnicas deste módulo — com as verificações empíricas que as sustentam — estão em [`busca-local/docs/DECISOES.md`](busca-local/docs/DECISOES.md).
 
 ---
 
@@ -90,7 +127,13 @@ Todas as decisões técnicas deste módulo — com as verificações empíricas 
 
 ```
 .
-├── busca-local/                    # Simulated Annealing (TSP) — em desenvolvimento
+├── busca-local/
+│   ├── data/raw/                   # dataset GR17 (TSPLIB) original
+│   ├── src/busca_local/            # EVRP, Hill Climbing, Simulated Annealing, SA com reaquecimento
+│   ├── notebooks/                  # notebook principal — a entrega desta modalidade
+│   ├── tests/                      # testes automatizados (pytest, 37 testes)
+│   ├── docs/                       # DECISOES.md e RESUMO_ESTRUTURA.md
+│   └── resultados/                 # CSVs dos experimentos oficiais (HC, SA, SA-reaquecido)
 ├── arvore-decisao/
 │   ├── data/                       # cache do dataset German Credit (OpenML)
 │   ├── src/arvore/                 # métricas de divisão, C4.5, CART, ensemble, avaliação
@@ -102,6 +145,15 @@ Todas as decisões técnicas deste módulo — com as verificações empíricas 
 ```
 
 ## Como reproduzir
+
+```bash
+cd busca-local
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+pytest tests/                       # 37 testes automatizados
+jupyter notebook notebooks/simulated_annealing_evrp.ipynb   # notebook principal
+```
 
 ```bash
 cd arvore-decisao
@@ -118,6 +170,8 @@ jupyter notebook notebooks/arvore_decisao.ipynb   # notebook principal (roda tam
 - scikit-learn (CART, Gradient Boosting)
 - chefboost (C4.5)
 - NumPy / Pandas
+- SciPy (testes estatísticos — Wilcoxon)
 - Matplotlib (visualização de resultados)
+- Jupyter / nbconvert (notebooks)
 - pytest (testes automatizados)
 
