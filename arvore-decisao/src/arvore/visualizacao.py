@@ -126,6 +126,60 @@ def grafico_complexidade_vs_acuracia(candidatos: list, meta: float = config.META
     return fig
 
 
+def grafico_comparacao_modelos(tabela_final: pd.DataFrame, baseline_majoritaria: float):
+    """Barras com a acurácia de teste de cada modelo, com a baseline da
+    classe majoritária marcada como referência."""
+    nomes_curtos = ["CART enxuto", "C4.5", "Gradient Boosting"]
+    cores = ["#2a78d6", "#eb6834", "#1baf7a"]
+    valores = tabela_final["acuracia_teste"].to_numpy()
+
+    fig, eixo = plt.subplots(figsize=(8, 6))
+    barras = eixo.bar(nomes_curtos, valores, color=cores, edgecolor="black", linewidth=0.5, width=0.6)
+    eixo.axhline(
+        baseline_majoritaria, color="#52514e", linestyle="--", linewidth=1.5,
+        label=f"Baseline (classe majoritária, {baseline_majoritaria:.0%})",
+    )
+    for barra, valor in zip(barras, valores):
+        eixo.annotate(
+            f"{valor:.1%}",
+            (barra.get_x() + barra.get_width() / 2, valor),
+            xytext=(0, 6),
+            textcoords="offset points",
+            ha="center",
+            fontsize=11,
+            fontweight="bold",
+        )
+    eixo.set_ylabel("Acurácia no teste")
+    eixo.set_ylim(0, max(valores.max(), baseline_majoritaria) * 1.2)
+    eixo.set_title("Desempenho no teste: árvore única × ensemble")
+    eixo.legend(loc="lower right")
+    return fig
+
+
+def grafico_estabilidade_cart(resultado_estabilidade, baseline_majoritaria: float):
+    """Acurácia de teste do CART enxuto em 10 sementes diferentes, mostrando
+    quanto o resultado varia conforme a divisão treino/teste."""
+    acuracias = resultado_estabilidade.acuracias
+    sementes = list(range(1, len(acuracias) + 1))
+
+    fig, eixo = plt.subplots(figsize=(9, 6))
+    eixo.bar(sementes, acuracias, color="#2a78d6", edgecolor="black", linewidth=0.5, width=0.6)
+    eixo.axhline(
+        resultado_estabilidade.media_acuracia, color="#eb6834", linestyle="-", linewidth=1.5,
+        label=f"Média ({resultado_estabilidade.media_acuracia:.1%} ± {resultado_estabilidade.desvio_padrao_acuracia:.1%})",
+    )
+    eixo.axhline(
+        baseline_majoritaria, color="#52514e", linestyle="--", linewidth=1.5,
+        label=f"Baseline (classe majoritária, {baseline_majoritaria:.0%})",
+    )
+    eixo.set_xlabel("Execução (semente diferente)")
+    eixo.set_ylabel("Acurácia no teste")
+    eixo.set_xticks(sementes)
+    eixo.set_title("Estabilidade do CART enxuto entre 10 divisões treino/teste")
+    eixo.legend(loc="lower right")
+    return fig
+
+
 def tabela_candidatos_cart(candidatos: list) -> pd.DataFrame:
     return pd.DataFrame(
         [
